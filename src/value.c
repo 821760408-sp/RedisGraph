@@ -15,6 +15,7 @@
 #include <sys/param.h>
 #include <assert.h>
 #include "util/rmalloc.h"
+#include "datatypes/time_stamp.h"
 
 SIValue SI_LongVal(int64_t i) {
   return (SIValue){.longval = i, .type = T_INT64};
@@ -42,6 +43,11 @@ SIValue SI_Node(void *n) {
 
 SIValue SI_Edge(void *e) {
   return (SIValue) {.ptrval = e, .type = T_EDGE, .allocation = M_VOLATILE};
+}
+
+SIValue SI_TimeStamp(void *ts) {
+  RG_TimeStamp *timeStamp = (RG_TimeStamp*)ts;
+  return (SIValue) {.longval = timeStamp->seconds, .allocation = timeStamp->nano, .type = T_TIMESTAMP};
 }
 
 SIValue SI_DuplicateStringVal(const char *s) {
