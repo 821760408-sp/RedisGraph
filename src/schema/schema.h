@@ -10,6 +10,7 @@
 #include "../redismodule.h"
 #include "../index/index.h"
 #include "../util/triemap/triemap.h"
+#include "../index/fulltext_index.h"
 #include "../graph/entities/graph_entity.h"
 #include "../../deps/RediSearch/src/redisearch_api.h"
 
@@ -22,10 +23,10 @@ typedef enum {
  * similar to a relational table structure, our schemas are a collection
  * of attributes we've encountered overtime as entities were created or updated. */
 typedef struct {
-  int id;                 /* Internal ID to a matrix within the graph. */
-  char *name;             /* Schema name. */
-  Index** indices;        /* Indices applicable to schema. */
-  RSIndex* fulltextIdx;   /* Full-text index. */
+  int id;                       // Internal ID to a matrix within the graph.
+  char *name;                   // Schema name.
+  Index** indices;              // Indices applicable to schema.
+  FullTextIndex* fulltextIdx;   // Full-text index.
 } Schema;
 
 /* Creates a new schema. */
@@ -41,10 +42,10 @@ unsigned short Schema_IndexCount(const Schema *s);
 Index* Schema_GetIndex(Schema *s, Attribute_ID attr_id);
 
 /* Sets schema fulltext index. */
-void Schema_SetFullTextIndex(Schema *s, RSIndex *idx);
+void Schema_SetFullTextIndex(Schema *s, FullTextIndex *idx);
 
 /* Retrieves schema full-text index, returns NULL if index doesn't exists. */
-RSIndex *Schema_GetFullTextIndex(const Schema *s);
+FullTextIndex *Schema_GetFullTextIndex(const Schema *s);
 
 /* Assign a new index to attribute
  * attribute must already exists and not associated with an index. */

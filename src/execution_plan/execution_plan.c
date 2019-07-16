@@ -10,6 +10,7 @@
 #include "./ops/ops.h"
 #include "../util/arr.h"
 #include "../util/vector.h"
+#include "../util/rmalloc.h"
 #include "../query_executor.h"
 #include "../graph/entities/edge.h"
 #include "./optimizations/optimizer.h"
@@ -614,7 +615,7 @@ static ExecutionPlan *_ExecutionPlan_Connect(ExecutionPlan *a, ExecutionPlan *b,
            (a->root->type == OPType_PROJECT || a->root->type == OPType_AGGREGATE));
 
     OpBase *tap;
-    OpBase **taps = array_new(sizeof(OpBase*), 1);
+    OpBase **taps = array_new(OpBase*, 1);
     _ExecutionPlan_StreamTaps(b->root, &taps);
 
     unsigned short tap_count = array_len(taps);

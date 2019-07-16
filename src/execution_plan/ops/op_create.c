@@ -6,6 +6,7 @@
 
 #include "op_create.h"
 #include "../../util/arr.h"
+#include "../../util/rmalloc.h"
 #include "../../parser/ast.h"
 #include "../../schema/schema.h"
 

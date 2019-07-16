@@ -41,16 +41,12 @@ Index* Schema_GetIndex(Schema *s, Attribute_ID id) {
     return NULL;
 }
 
-void Schema_SetFullTextIndex(Schema *s, RSIndex *idx) {
-    assert(s && idx);
-    // Overriding previouse index.
-    if(s->fulltextIdx && idx != s->fulltextIdx) {
-        RediSearch_DropIndex(s->fulltextIdx);
-    }
+void Schema_SetFullTextIndex(Schema *s, FullTextIndex *idx) {
+    assert(s && idx && !s->fulltextIdx);
     s->fulltextIdx = idx;
 }
 
-RSIndex *Schema_GetFullTextIndex(const Schema *s) {
+FullTextIndex *Schema_GetFullTextIndex(const Schema *s) {
     assert(s);
     return s->fulltextIdx;
 }
@@ -97,6 +93,6 @@ void Schema_Free(Schema *schema) {
     uint32_t index_count = array_len(schema->indices);
     for(int i = 0; i < index_count; i++) Index_Free(schema->indices[i]);
     array_free(schema->indices);
-    if(schema->fulltextIdx) RediSearch_DropIndex(schema->fulltextIdx);
+    if(schema->fulltextIdx) FullTextIndex_Free(schema->fulltextIdx);
     rm_free(schema);
 }

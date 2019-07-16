@@ -6,6 +6,7 @@
 
 #include "op_conditional_traverse.h"
 #include "../../util/arr.h"
+#include "../../util/rmalloc.h"
 #include "../../GraphBLASExt/GxB_Delete.h"
 
 static void _setupTraversedRelations(CondTraverse *op, GraphContext *gc) {
