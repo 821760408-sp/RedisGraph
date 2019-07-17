@@ -7,9 +7,9 @@
 #include "proc_fulltext_query.h"
 #include "../value.h"
 #include "../util/arr.h"
+#include "../index/index.h"
 #include "../util/rmalloc.h"
 #include "../graph/graphcontext.h"
-#include "../index/fulltext_index.h"
 
 //------------------------------------------------------------------------------
 // fulltext createNodeIndex
@@ -21,7 +21,7 @@ typedef struct {
     Node n;
     Graph *g;
     SIValue *output;
-    FullTextIndex *idx;
+    Index *idx;
     RSResultsIterator *iter;
 } QueryNodeContext;
 
@@ -39,7 +39,7 @@ ProcedureResult Proc_FulltextQueryNodeInvoke(ProcedureCtx *ctx, char **args) {
     // Get full-text index from schema.
     Schema *s = GraphContext_GetSchema(gc, label, SCHEMA_NODE);
     if(s == NULL) return PROCEDURE_OK;
-    FullTextIndex *idx = Schema_GetFullTextIndex(s);
+    Index *idx = Schema_GetIndex(s, NULL, IDX_FULLTEXT);
     if(!idx) return PROCEDURE_OK;
 
     QueryNodeContext *pdata = rm_malloc(sizeof(QueryNodeContext));
@@ -52,9 +52,10 @@ ProcedureResult Proc_FulltextQueryNodeInvoke(ProcedureCtx *ctx, char **args) {
     // pdata->output = array_append(pdata->output, SI_DoubleVal(0.0));
 
     // Execute query
-    pdata->iter = FullTextIndex_Query(pdata->idx, query, &err);
-    // TODO: report error!
-    if(err) pdata->iter = NULL;
+    pdata->iter = Index_Query(pdata->idx, query, &err);
+    if(!pdata->iter) {
+        // TODO: report error!
+    }
 
     ctx->privateData = pdata;
     return PROCEDURE_OK;

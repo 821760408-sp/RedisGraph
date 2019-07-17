@@ -51,26 +51,18 @@ static void _QueueUpdate(OpUpdate *op, GraphEntity *entity, GraphEntityType type
 }
 
 /* Introduce updated entity to index. */
-static void _UpdateIndex(EntityUpdateCtx *ctx, GraphContext *gc, Schema *s, SIValue *old_value, SIValue *new_value) {
-    if (s == NULL) return;
+static void _UpdateIndex(EntityUpdateCtx *ctx, GraphContext *gc, Schema *s) {
     Node *n = &ctx->n;
     EntityID node_id = ENTITY_GET_ID(n);
 
     // See if there's an index on label/property pair.
-    Index *idx = Schema_GetIndex(s, ctx->attr_id);
-    if(!idx) return;
-
-    if(old_value != PROPERTY_NOTFOUND) {
-        /* Updating an existing property.
-         * remove entity from index using old value. */
-        Index_DeleteNode(idx, node_id, old_value);
+    Index *idx = Schema_GetIndex(s, NULL, IDX_EXACT_MATCH);
+    if(idx) {
+        // Reindex
+        // TODO: reindex only once per noce.
+        Index_RemoveNode(idx, n);
+        Index_IndexNode(idx, n);
     }
-    
-    // Setting an attribute value to NULL remove that attribute.
-    if(SIValue_IsNull(*new_value)) return;
-
-    // Add node to index.
-    Index_InsertNode(idx, node_id, new_value);
 }
 
 static void _UpdateNode(OpUpdate *op, EntityUpdateCtx *ctx) {
@@ -88,10 +80,7 @@ static void _UpdateNode(OpUpdate *op, EntityUpdateCtx *ctx) {
     }
 
     // Try to get current property value.
-    SIValue *old_value  = GraphEntity_GetProperty((GraphEntity*)node, ctx->attr_id);
-
-    // Update index for node entities.
-    _UpdateIndex(ctx, op->gc, s, old_value, &ctx->new_value);
+    SIValue *old_value = GraphEntity_GetProperty((GraphEntity*)node, ctx->attr_id);
 
     if(old_value == PROPERTY_NOTFOUND) {
         // Add new property.
@@ -100,6 +89,9 @@ static void _UpdateNode(OpUpdate *op, EntityUpdateCtx *ctx) {
         // Update property.
         GraphEntity_SetProperty((GraphEntity*)node, ctx->attr_id, ctx->new_value);
     }
+
+    // Update index for node entities.
+    if(s) _UpdateIndex(ctx, op->gc, s);
 }
 
 static void _UpdateEdge(OpUpdate *op, EntityUpdateCtx *ctx) {

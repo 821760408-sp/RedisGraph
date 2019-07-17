@@ -9,14 +9,14 @@
 #include "../util/arr.h"
 #include "../util/rmalloc.h"
 #include "../graph/graphcontext.h"
-#include "../index/fulltext_index.h"
+#include "../index/index.h"
 
 //------------------------------------------------------------------------------
 // fulltext createNodeIndex
 //------------------------------------------------------------------------------
 
-// CALL db.idx.fulltext.createNodeIndex(index_name, label, attributes)
-// CALL db.idx.fulltext.createNodeIndex('books', ['Book'], ['title', 'authors'])
+// CALL db.idx.fulltext.createNodeIndex(label, fields...)
+// CALL db.idx.fulltext.createNodeIndex('book', 'title', 'authors')
 ProcedureResult Proc_FulltextCreateNodeIdxInvoke(ProcedureCtx *ctx, char **args) {
     if(array_len(args) < 2) return PROCEDURE_ERR;
 
@@ -26,23 +26,22 @@ ProcedureResult Proc_FulltextCreateNodeIdxInvoke(ProcedureCtx *ctx, char **args)
     char **fields = args+1; // Skip index name.
 
     GraphContext *gc = GraphContext_GetFromTLS();
-    Schema *s = GraphContext_GetSchema(gc, label, SCHEMA_NODE);
-    FullTextIndex *idx = Schema_GetFullTextIndex(s);
+    Index *idx = GraphContext_GetIndex(gc, label, NULL, IDX_FULLTEXT);
 
-    // Schema doesn't contains a fulltext index create one.
+    // Index doesn't exists, create.
     if(idx == NULL) {
-        idx = FullTextIndex_New(label);
-        Schema_SetFullTextIndex(s, idx);
+        GraphContext_AddIndex(&idx, gc, label, fields[0], IDX_FULLTEXT);
     }
 
     // Introduce fields to index.
     for(int i = 0; i < fields_count; i++) {
         char *field = fields[i];
-        FullTextIndex_AddField(idx, field);
+        // It's OK to add existing field.
+        Index_AddField(idx, field);
     }
 
     // Build index.
-    FullTextIndex_Construct(idx);
+    Index_Construct(idx);
 
     return PROCEDURE_OK;
 }

@@ -12,6 +12,7 @@
 #include "../../graph/graph.h"
 #include "../../index/index.h"
 #include "../../graph/entities/node.h"
+#include "../../../deps/RediSearch/src/redisearch_api.h"
 
 
 typedef struct {
@@ -20,11 +21,12 @@ typedef struct {
     Graph *g;
     uint recLength;  // Number of entries in a record.
     uint nodeRecIdx;
-    IndexIter *iter;
+    RSIndex *idx;
+    RSResultsIterator *iter;
 } IndexScan;
 
 /* Creates a new IndexScan operation */
-OpBase *NewIndexScanOp(Graph *g, Node *n, IndexIter *iter, AST *ast);
+OpBase *NewIndexScanOp(Graph *g, Node *n, RSIndex *idx, RSResultsIterator *iter, AST *ast);
 
 /* IndexScan next operation
  * called each time a new node is required */
