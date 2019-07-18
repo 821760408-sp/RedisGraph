@@ -38,28 +38,28 @@ SIValue SI_PtrVal(void* v) {
 }
 
 SIValue SI_Node(void *n) {
-  return (SIValue) {.ptrval = n, .type = T_NODE, .allocation = M_VOLATILE};
+  return (SIValue) {.ptrval = n, .allocation = M_VOLATILE , .type = T_NODE};
 }
 
 SIValue SI_Edge(void *e) {
-  return (SIValue) {.ptrval = e, .type = T_EDGE, .allocation = M_VOLATILE};
+  return (SIValue) {.ptrval = e, .allocation = M_VOLATILE, .type = T_EDGE};
 }
 
 SIValue SI_TimeStamp(void *ts) {
   RG_TimeStamp *timeStamp = (RG_TimeStamp*)ts;
-  return (SIValue) {.longval = timeStamp->seconds, .allocation = timeStamp->nano, .type = T_TIMESTAMP};
+  return (SIValue) {.time = *timeStamp, .type = T_TIMESTAMP};
 }
 
 SIValue SI_DuplicateStringVal(const char *s) {
-  return (SIValue){.stringval = rm_strdup(s), .type = T_STRING, .allocation = M_SELF};
+  return (SIValue){.stringval = rm_strdup(s), .allocation = M_SELF, .type = T_STRING};
 }
 
 SIValue SI_ConstStringVal(char *s) {
-  return (SIValue){.stringval = s, .type = T_STRING, .allocation = M_CONST};
+  return (SIValue){.stringval = s, .allocation = M_CONST, .type = T_STRING};
 }
 
 SIValue SI_TransferStringVal(char *s) {
-  return (SIValue){.stringval = s, .type = T_STRING, .allocation = M_SELF};
+  return (SIValue){.stringval = s, .allocation = M_SELF, .type = T_STRING};
 }
 
 SIValue SI_Clone(SIValue v) {
@@ -104,6 +104,10 @@ int SIValue_ToString(SIValue v, char *buf, size_t len) {
   case T_NODE:
   case T_EDGE:
     bytes_written = snprintf(buf, len, "%llu", ENTITY_GET_ID((GraphEntity*)v.ptrval));
+    break;
+  case T_TIMESTAMP:
+    strncpy(buf, RG_TimeStamp_ToString(v.time), len);
+    bytes_written = strlen(buf);
     break;
   case T_NULL:
   default:
@@ -208,6 +212,7 @@ SIValue SIValue_Divide(const SIValue a, const SIValue b) {
 }
 
 int SIValue_Compare(const SIValue a, const SIValue b) {
+<<<<<<< Updated upstream
     /* In order to be comparable, both SIValues must be strings,
      * booleans, or numerics. */
     if(a.type == b.type) {
@@ -226,6 +231,27 @@ int SIValue_Compare(const SIValue a, const SIValue b) {
             // Both inputs were of an incomparable type, like a pointer or NULL
             return DISJOINT;
         }
+=======
+  /* In order to be comparable, both SIValues must be strings,
+   * booleans, or numerics. */
+  if (a.type == b.type) {
+    switch (a.type) {
+      case T_INT64:
+      case T_BOOL:
+        return a.longval - b.longval;
+      case T_DOUBLE:
+        return SAFE_COMPARISON_RESULT(a.doubleval - b.doubleval);
+      case T_STRING:
+        return strcmp(a.stringval, b.stringval);
+      case T_NODE:
+      case T_EDGE:
+        return ENTITY_GET_ID((GraphEntity*)a.ptrval) - ENTITY_GET_ID((GraphEntity*)b.ptrval);
+      case T_TIMESTAMP:
+        return RG_TimeStamp_Compare(a.time, b.time);
+      default:
+        // Both inputs were of an incomparable type, like a pointer or NULL
+        return DISJOINT;
+>>>>>>> Stashed changes
     }
 
     /* The inputs have different SITypes - compare them if they
@@ -245,8 +271,12 @@ int SIValue_Order(const SIValue a, const SIValue b) {
   int cmp = SIValue_Compare(a, b);
   if (cmp != DISJOINT) return cmp;
 
-  // Cypher's orderability property defines string < boolean < numeric < NULL.
-  if (a.type == T_STRING) {
+  // Cypher's orderability property defines datetime < string < boolean < numeric < NULL.
+  if (a.type == T_TIMESTAMP) {
+    return -1;
+  } else if (b.type == T_TIMESTAMP) {
+    return 1;
+  } else if (a.type == T_STRING) {
     return -1;
   } else if (b.type == T_STRING) {
     return 1;
@@ -280,6 +310,7 @@ void SIValue_Persist(SIValue *v) {
     v->allocation = M_SELF;
   }
 }
+
 
 void SIValue_Free(SIValue *v) {
   // The free routine only performs work if it owns a heap allocation.
