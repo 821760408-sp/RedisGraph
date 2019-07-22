@@ -15,7 +15,6 @@
 #include <sys/param.h>
 #include <assert.h>
 #include "util/rmalloc.h"
-#include "datatypes/time_stamp.h"
 
 SIValue SI_LongVal(int64_t i) {
   return (SIValue){.longval = i, .type = T_INT64};
@@ -45,9 +44,9 @@ SIValue SI_Edge(void *e) {
   return (SIValue) {.ptrval = e, .allocation = M_VOLATILE, .type = T_EDGE};
 }
 
-SIValue SI_TimeStamp(void *ts) {
-  RG_TimeStamp *timeStamp = (RG_TimeStamp*)ts;
-  return (SIValue) {.time = *timeStamp, .type = T_TIMESTAMP};
+SIValue SI_TemporalValue(void *ts) {
+  RG_TemporalValue *temporalValue = (RG_TemporalValue*)ts;
+  return (SIValue) {.time = *temporalValue, .type = T_TEMPORAL_VALUE};
 }
 
 SIValue SI_DuplicateStringVal(const char *s) {
@@ -105,8 +104,8 @@ int SIValue_ToString(SIValue v, char *buf, size_t len) {
   case T_EDGE:
     bytes_written = snprintf(buf, len, "%llu", ENTITY_GET_ID((GraphEntity*)v.ptrval));
     break;
-  case T_TIMESTAMP:
-    strncpy(buf, RG_TimeStamp_ToString(v.time), len);
+  case T_TEMPORAL_VALUE:
+    strncpy(buf, RG_TemporalValue_ToString(v.time), len);
     bytes_written = strlen(buf);
     break;
   case T_NULL:
@@ -212,26 +211,6 @@ SIValue SIValue_Divide(const SIValue a, const SIValue b) {
 }
 
 int SIValue_Compare(const SIValue a, const SIValue b) {
-<<<<<<< Updated upstream
-    /* In order to be comparable, both SIValues must be strings,
-     * booleans, or numerics. */
-    if(a.type == b.type) {
-        switch (a.type) {
-        case T_INT64:
-        case T_BOOL:
-            return a.longval - b.longval;
-        case T_DOUBLE:
-            return SAFE_COMPARISON_RESULT(a.doubleval - b.doubleval);
-        case T_STRING:
-            return strcmp(a.stringval, b.stringval);
-        case T_NODE:
-        case T_EDGE:
-            return ENTITY_GET_ID((GraphEntity*)a.ptrval) - ENTITY_GET_ID((GraphEntity*)b.ptrval);
-        default:
-            // Both inputs were of an incomparable type, like a pointer or NULL
-            return DISJOINT;
-        }
-=======
   /* In order to be comparable, both SIValues must be strings,
    * booleans, or numerics. */
   if (a.type == b.type) {
@@ -246,13 +225,13 @@ int SIValue_Compare(const SIValue a, const SIValue b) {
       case T_NODE:
       case T_EDGE:
         return ENTITY_GET_ID((GraphEntity*)a.ptrval) - ENTITY_GET_ID((GraphEntity*)b.ptrval);
-      case T_TIMESTAMP:
-        return RG_TimeStamp_Compare(a.time, b.time);
+      case T_TEMPORAL_VALUE:
+        return RG_TemporalValue_Compare(a.time, b.time);
       default:
         // Both inputs were of an incomparable type, like a pointer or NULL
         return DISJOINT;
->>>>>>> Stashed changes
     }
+  }
 
     /* The inputs have different SITypes - compare them if they
      * are both numerics of differing types */
@@ -272,9 +251,9 @@ int SIValue_Order(const SIValue a, const SIValue b) {
   if (cmp != DISJOINT) return cmp;
 
   // Cypher's orderability property defines datetime < string < boolean < numeric < NULL.
-  if (a.type == T_TIMESTAMP) {
+  if (a.type == T_TEMPORAL_VALUE) {
     return -1;
-  } else if (b.type == T_TIMESTAMP) {
+  } else if (b.type == T_TEMPORAL_VALUE) {
     return 1;
   } else if (a.type == T_STRING) {
     return -1;
