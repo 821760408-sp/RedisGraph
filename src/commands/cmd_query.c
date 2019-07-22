@@ -80,7 +80,7 @@ void _MGraph_Query(void *args) {
     CommandCtx_ThreadSafeContextLock(qctx);
     GraphContext *gc = GraphContext_Retrieve(ctx, qctx->graphName, readonly);
     if(!gc) {
-        if(!ast[0]->createNode && !ast[0]->mergeNode) {
+        if(!ast[0]->createNode && !ast[0]->mergeNode && !ast[0]->indexNode) {
             CommandCtx_ThreadSafeContextUnlock(qctx);
             RedisModule_ReplyWithError(ctx, "key doesn't contains a graph object.");
             goto cleanup;
@@ -96,13 +96,11 @@ void _MGraph_Query(void *args) {
         /* TODO: free graph if no entities were created. */
     }
 
-    bool compact = _check_compact_flag(qctx);
-
     CommandCtx_ThreadSafeContextUnlock(qctx);
+    bool compact = _check_compact_flag(qctx);
 
     // Perform query validations before and after ModifyAST
     if (AST_PerformValidations(ctx, ast) != AST_VALID) goto cleanup;
-
     ModifyAST(ast);
     if (AST_PerformValidations(ctx, ast) != AST_VALID) goto cleanup;
 
@@ -132,7 +130,7 @@ void _MGraph_Query(void *args) {
 cleanup:
     // Release the read-write lock
     if(lockAcquired) {
-        if(readonly)Graph_ReleaseLock(gc->g);
+        if(readonly) Graph_ReleaseLock(gc->g);
         else Graph_WriterLeave(gc->g);
     }
 

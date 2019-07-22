@@ -202,9 +202,7 @@ int GraphContext_AddIndex(Index **idx, GraphContext *gc, const char *label, cons
 
     // Retrieve the schema for this label
     Schema *s = GraphContext_GetSchema(gc, label, SCHEMA_NODE);
-    if (s == NULL) {
-        s = GraphContext_AddSchema(gc, label, SCHEMA_NODE);
-    }
+    if (s == NULL) s = GraphContext_AddSchema(gc, label, SCHEMA_NODE);
     return Schema_AddIndex(idx, s, field, type);
 }
 

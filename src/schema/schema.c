@@ -83,6 +83,15 @@ int Schema_RemoveIndex(Schema *s, const char *field, IndexType type) {
     Index *idx = Schema_GetIndex(s, field, type);
     if(idx == NULL) return INDEX_FAIL;
 
+    /* Currently dropping a full-text index
+     * doesn't take into account fields. */
+    if(type == IDX_FULLTEXT) {
+        assert(field == NULL);
+        Index_Free(idx);
+        s->fulltextIdx = NULL;
+        return INDEX_OK;
+    }
+
     Index_RemoveField(idx, field);
 
     // TODO: if index field count dropped to 0, delete index.

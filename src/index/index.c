@@ -180,7 +180,6 @@ void Index_IndexNode
             }
         }
     }
-
     RediSearch_SpecAddDocument(rsIdx, doc);
 }
 
@@ -205,7 +204,10 @@ void Index_Construct
     
     /* RediSearch index already exists
      * re-construct */
-    if(idx->idx) RediSearch_DropIndex(idx->idx);
+    if(idx->idx) {
+        RediSearch_DropIndex(idx->idx);
+        idx->idx = NULL;
+    }
 
     RSIndex *rsIdx = NULL;
     RSIndexOptions *idx_options = RediSearch_CreateIndexOptions();
@@ -292,6 +294,21 @@ bool Index_ContainsField
     }
 
     return false;
+}
+
+void Index_RefreshSchema
+(
+    Index *idx
+)
+{
+    assert(idx);
+    GraphContext *gc = GraphContext_GetFromTLS();
+
+    for(uint i = 0; i < idx->fields_count; i++) {
+        if(idx->fields_ids[i] == ATTRIBUTE_NOTFOUND) {
+            idx->fields_ids[i] = GraphContext_GetAttributeID(gc, idx->fields[i]);
+        }
+    }
 }
 
 // Free index.

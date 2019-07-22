@@ -129,8 +129,12 @@ void AR_EXP_Reduce(const AR_ExpNode *root);
 
 /* Utility functions */
 /* Traverse an expression tree and add all graph entity aliases
- * (from variadic) to a triemap. */
+ * (from variadic) to a prefix tree. */
 void AR_EXP_CollectAliases(AR_ExpNode *root, rax *aliases);
+
+/* Traverse an expression tree and add all mentioned attributes:
+ * n.attr > 3 to a prefix tree. */
+void AR_EXP_CollectAttributes(AR_ExpNode *root, rax *attributes);
 
 /* Search for an aggregation node within the expression tree.
  * Return 1 and sets agg_node to the aggregation node if exists,

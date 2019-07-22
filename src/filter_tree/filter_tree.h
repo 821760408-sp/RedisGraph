@@ -65,6 +65,10 @@ int FilterTree_applyFilters(const FT_FilterNode* root, const Record r);
  * without duplications. */
 rax* FilterTree_CollectAliases(const FT_FilterNode *root);
 
+/* Extract every attribute mentioned in the tree
+ * without duplications. */
+rax* FilterTree_CollectAttributes(const FT_FilterNode *root);
+
 /* Prints tree. */
 void FilterTree_Print(const FT_FilterNode *root);
 

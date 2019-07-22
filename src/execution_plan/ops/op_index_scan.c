@@ -15,27 +15,27 @@ int IndexScanToString(const OpBase *ctx, char *buff, uint buff_len) {
 }
 
 OpBase *NewIndexScanOp(Graph *g, Node *n, RSIndex *idx, RSResultsIterator *iter, AST *ast) {
-  IndexScan *indexScan = malloc(sizeof(IndexScan));
-  indexScan->g = g;
-  indexScan->n = n;
-  indexScan->idx = idx;
-  indexScan->iter = iter;
-  indexScan->nodeRecIdx = AST_GetAliasID(ast, n->alias);
-  indexScan->recLength = AST_AliasCount(ast);
+    IndexScan *indexScan = malloc(sizeof(IndexScan));
+    indexScan->g = g;
+    indexScan->n = n;
+    indexScan->idx = idx;
+    indexScan->iter = iter;
+    indexScan->nodeRecIdx = AST_GetAliasID(ast, n->alias);
+    indexScan->recLength = AST_AliasCount(ast);
 
-  // Set our Op operations
-  OpBase_Init(&indexScan->op);
-  indexScan->op.name = "Index Scan";
-  indexScan->op.type = OPType_INDEX_SCAN;
-  indexScan->op.consume = IndexScanConsume;
-  indexScan->op.reset = IndexScanReset;
-  indexScan->op.toString = IndexScanToString;
-  indexScan->op.free = IndexScanFree;
+    // Set our Op operations
+    OpBase_Init(&indexScan->op);
+    indexScan->op.name = "Index Scan";
+    indexScan->op.type = OPType_INDEX_SCAN;
+    indexScan->op.consume = IndexScanConsume;
+    indexScan->op.reset = IndexScanReset;
+    indexScan->op.toString = IndexScanToString;
+    indexScan->op.free = IndexScanFree;
 
-  indexScan->op.modifies = NewVector(char*, 1);
-  Vector_Push(indexScan->op.modifies, n->alias);
+    indexScan->op.modifies = NewVector(char*, 1);
+    Vector_Push(indexScan->op.modifies, n->alias);
 
-  return (OpBase*)indexScan;
+    return (OpBase*)indexScan;
 }
 
 Record IndexScanConsume(OpBase *opBase) {

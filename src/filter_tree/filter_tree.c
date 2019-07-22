@@ -191,10 +191,42 @@ void _FilterTree_CollectAliases(const FT_FilterNode *root, rax *aliases) {
     }
 }
 
+void _FilterTree_CollectAttributes(const FT_FilterNode *root, rax *attributes) {
+    if(root == NULL) return;
+
+    switch(root->t) {
+        case FT_N_COND:
+        {
+            _FilterTree_CollectAttributes(root->cond.left, attributes);
+            _FilterTree_CollectAttributes(root->cond.right, attributes);
+            break;
+        }
+        case FT_N_PRED:
+        {
+            /* Traverse left and right-hand expressions, adding all encountered attributes
+             * to the triemap. */
+            AR_EXP_CollectAttributes(root->pred.lhs, attributes);
+            AR_EXP_CollectAttributes(root->pred.rhs, attributes);
+            break;
+        }
+        default:
+        {
+            assert(0);
+            break;
+        }
+    }
+}
+
 rax *FilterTree_CollectAliases(const FT_FilterNode *root) {
     rax *aliases = raxNew();
     _FilterTree_CollectAliases(root, aliases);
     return aliases;
+}
+
+rax* FilterTree_CollectAttributes(const FT_FilterNode *root) {
+    rax *attributes = raxNew();
+    _FilterTree_CollectAttributes(root, attributes);
+    return attributes;
 }
 
 void _FilterTree_Print(const FT_FilterNode *root, int ident) {

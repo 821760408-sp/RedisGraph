@@ -24,14 +24,14 @@ typedef struct {
     Attribute_ID *fields_ids;   // Indexed field IDs.
     uint fields_count;          // Number of fields.
     RSIndex *idx;               // RediSearch full-text index.
-    IndexType type;           // Index type exact-match / fulltext.
+    IndexType type;             // Index type exact-match / fulltext.
 } Index;
 
 // Create a new FullText index.
 Index* Index_New
 (
     const char *label,  // Indexed label
-    IndexType type    // Index is a fulltext index
+    IndexType type      // Index is a fulltext index
 );
 
 // Adds field to index.
@@ -99,6 +99,12 @@ bool Index_ContainsField
 (
     const Index *idx,
     const char *field
+);
+
+// Tries to update missing fields id.
+void Index_RefreshSchema
+(
+    Index *idx
 );
 
 // Free fulltext index.
